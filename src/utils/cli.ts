@@ -5,6 +5,8 @@ import { add } from "../commands/add";
 import { remove } from "../commands/remove";
 import { generate } from "../commands/generate";
 import { setup } from "./setup";
+import inquirer from "inquirer";
+import { hash, validateKey } from "./encryption";
 
 const optionsDef: OptionDefinition[] = [
   { name: "init", alias: "i", type: String },
@@ -16,28 +18,44 @@ const optionsDef: OptionDefinition[] = [
   { name: "copy", alias: "c", type: Boolean },
 ];
 
+const cmds = {
+  init,
+  list,
+  add,
+  remove,
+  generate,
+};
+
 export async function cli() {
   try {
     const options = commandLineArgs(optionsDef);
 
     const ok = await setup();
 
-    if (Object.keys(options).includes("init")) {
+    const cliCmd = Object.keys(options) as (keyof typeof cmds)[];
+    if (cliCmd[0] === "init") {
       if (ok) {
         console.log("Credentials exists! No need to run init again");
       } else {
         init();
       }
     } else if (ok) {
-      if (options.list || Object.keys(options).includes("list")) {
-        list(options);
-      } else if (options.add) {
-        add();
-      } else if (options.remove) {
-        remove();
-      } else if (options.generate) {
-        generate();
-      }
+      inquirer
+        .prompt([
+          {
+            type: "password",
+            message: "Enter your master key: ",
+            name: "mKey",
+            validate: async (value: string) => {
+              const isValid = await validateKey("master", value);
+              return !isValid ? "Wrong master key!" : true;
+            },
+          },
+        ])
+        .then(async (res) => {
+          const hMkey = await hash(res.mKey);
+          cmds[cliCmd[0]](options, hMkey);
+        });
     } else {
       console.log("Missing credentials! Try runnig --init (-i) first!");
     }

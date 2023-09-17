@@ -1,8 +1,9 @@
 import { Buffer } from "node:buffer";
-const { scryptSync, randomBytes, createCipheriv, createDecipheriv } =
-  await import("node:crypto");
+import { getBasePath } from "./getSrcPath";
+const { scryptSync, createCipheriv, createDecipheriv } = await import(
+  "node:crypto"
+);
 
-const encPwd = process.env.ENC_PWD || "DeF4uLT_3NC_P455W0RD";
 const encSalt = process.env.ENC_SALT || "DeF4uLT_3NC_S4lT";
 const encAlgo = process.env.ENC_ALGORITHM || "aes-192-cbc";
 
@@ -15,7 +16,7 @@ export async function hash(input: string) {
  * Validate credentials keys against their hash*/
 export async function validateKey(kind: "master" | "vault", key: string) {
   // try to read the cred file
-  const file = Bun.file(`${import.meta.dir}/../.db/cred`);
+  const file = Bun.file(`${getBasePath()}/.db/cred`);
 
   const credFile = await file.text();
 
@@ -41,11 +42,12 @@ export async function validateKey(kind: "master" | "vault", key: string) {
   }
 }
 
-export async function encrypt(input: string) {
+export async function encrypt(input: string, accessKey: string) {
   try {
     // generate a rand init vect
     const iv = Buffer.alloc(16, 0);
-    const key = scryptSync(encPwd, encSalt, 24);
+    const hashedAccessKey = await hash(accessKey);
+    const key = scryptSync(hashedAccessKey, encSalt, 24);
     // create the cipher using the key and the init  vect
     const cipher = createCipheriv(encAlgo, key, iv);
     let encInput = cipher.update(input, "utf-8", "hex");
@@ -57,11 +59,12 @@ export async function encrypt(input: string) {
   }
 }
 
-export async function decrypt(input: string) {
+export async function decrypt(input: string, accessKey: string) {
   try {
     // generate a rand init vect
     const iv = Buffer.alloc(16, 0);
-    const key = scryptSync(encPwd, encSalt, 24);
+    const hashedAccessKey = await hash(accessKey);
+    const key = scryptSync(hashedAccessKey, encSalt, 24);
     const decipher = createDecipheriv(encAlgo, key, iv);
 
     let decInput = decipher.update(input, "hex", "utf-8");

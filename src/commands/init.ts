@@ -1,5 +1,6 @@
 import inquirer from "inquirer";
-import { mkdir } from "node:fs";
+import { hash } from "../utils/encryption";
+import { saveCred } from "../utils/saveData";
 
 export function init() {
   inquirer
@@ -23,19 +24,10 @@ export function init() {
     ])
     .then(async (res) => {
       // Hash keys
-      const masterKey = await Bun.password.hash(res.m_key);
-      const vaultKey = await Bun.password.hash(`${masterKey}${res.v_key}`);
+      const masterKey = await hash(res.m_key);
+      const vaultKey = await hash(res.v_key);
 
       // save hashed keys
-      mkdir(`${import.meta.dir}/../.db/`, null, async (err) => {
-        if (err) {
-          console.error("Error: Unable to save credentials!");
-          console.error(err);
-        } else {
-          const data = `${masterKey}\n${vaultKey}`;
-          await Bun.write(`${import.meta.dir}/../.db/cred`, data);
-          console.log("Saved credentials successfully!");
-        }
-      });
+      await saveCred(masterKey, vaultKey);
     });
 }
