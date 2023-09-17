@@ -4,6 +4,7 @@ import { list } from "../commands/list";
 import { add } from "../commands/add";
 import { remove } from "../commands/remove";
 import { generate } from "../commands/generate";
+import { setup } from "./setup";
 
 const optionsDef: OptionDefinition[] = [
   { name: "init", alias: "i", type: String },
@@ -15,20 +16,30 @@ const optionsDef: OptionDefinition[] = [
   { name: "copy", alias: "c", type: Boolean },
 ];
 
-export function cli() {
+export async function cli() {
   try {
     const options = commandLineArgs(optionsDef);
 
+    const ok = await setup();
+
     if (Object.keys(options).includes("init")) {
-      init(options);
-    } else if (options.list || Object.keys(options).includes("list")) {
-      list(options);
-    } else if (options.add) {
-      add();
-    } else if (options.remove) {
-      remove();
-    } else if (options.generate) {
-      generate();
+      if (ok) {
+        console.log("Credentials exists! No need to run init again");
+      } else {
+        init();
+      }
+    } else if (ok) {
+      if (options.list || Object.keys(options).includes("list")) {
+        list(options);
+      } else if (options.add) {
+        add();
+      } else if (options.remove) {
+        remove();
+      } else if (options.generate) {
+        generate();
+      }
+    } else {
+      console.log("Missing credentials! Try runnig --init (-i) first!");
     }
   } catch (err: any) {
     console.error(err.message);
