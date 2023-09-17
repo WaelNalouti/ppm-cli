@@ -1,1 +1,3 @@
-console.log("Hello via Bun!");
+import { cli } from "./utils/cli";
+
+cli();

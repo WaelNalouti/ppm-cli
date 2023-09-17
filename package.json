@@ -3,9 +3,15 @@
   "module": "./src/index.ts",
   "type": "module",
   "devDependencies": {
+    "@types/command-line-args": "^5.2.1",
+    "@types/figlet": "^1.5.6",
     "bun-types": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "command-line-args": "^5.2.1",
+    "figlet": "^1.6.0"
   }
 }
