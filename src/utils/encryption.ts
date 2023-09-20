@@ -42,13 +42,14 @@ export async function validateKey(kind: "master" | "vault", key: string) {
   }
 }
 
-export async function encrypt(input: string, accessKey: string) {
+export async function encrypt(input: string) {
   try {
     // generate a rand init vect
     const iv = Buffer.alloc(16, 0);
-    const hashedAccessKey = await hash(accessKey);
-    const key = scryptSync(hashedAccessKey, encSalt, 24);
-    // create the cipher using the key and the init  vect
+    const credfile = Bun.file(`${getBasePath()}/.db/cred`);
+    const credH = await credfile.text();
+    const key = scryptSync(credH, encSalt, 24);
+    // create the cipher using the key and the init vect
     const cipher = createCipheriv(encAlgo, key, iv);
     let encInput = cipher.update(input, "utf-8", "hex");
     encInput += cipher.final("hex");
@@ -59,14 +60,15 @@ export async function encrypt(input: string, accessKey: string) {
   }
 }
 
-export async function decrypt(input: string, accessKey: string) {
+export async function decrypt(input: string) {
   try {
     // generate a rand init vect
     const iv = Buffer.alloc(16, 0);
-    const hashedAccessKey = await hash(accessKey);
-    const key = scryptSync(hashedAccessKey, encSalt, 24);
+    const credfile = Bun.file(`${getBasePath()}/.db/cred`);
+    const credH = await credfile.text();
+    const key = scryptSync(credH, encSalt, 24);
+    // create the decipher using the key and the init vect
     const decipher = createDecipheriv(encAlgo, key, iv);
-
     let decInput = decipher.update(input, "hex", "utf-8");
     decInput += decipher.final("utf-8");
     return decInput;

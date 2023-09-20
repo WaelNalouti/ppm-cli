@@ -53,8 +53,9 @@ export async function cli() {
           },
         ])
         .then(async (res) => {
-          const hMkey = await hash(res.mKey);
-          cmds[cliCmd[0]](options, hMkey);
+          // FIXME: if we remove the hashing from here the following functions don't get called
+          await hash(res.mKey);
+          cmds[cliCmd[0]](options);
         });
     } else {
       console.log("Missing credentials! Try runnig --init (-i) first!");

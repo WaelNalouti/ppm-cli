@@ -1,9 +1,10 @@
 import { type CommandLineOptions } from "command-line-args";
 import inquirer from "inquirer";
-import { hash, validateKey } from "../utils/encryption";
-import { checkPwdExist, savePwd } from "../utils/saveData";
+import { validateKey } from "../utils/encryption";
+import { savePwd } from "../utils/saveData";
+import { checkPwdExist } from "../utils/readData";
 
-export function add(options: CommandLineOptions, hMkey: string) {
+export function add(options: CommandLineOptions) {
   inquirer
     .prompt([
       {
@@ -33,7 +34,6 @@ export function add(options: CommandLineOptions, hMkey: string) {
       },
     ])
     .then(async (res) => {
-      const vaultKey = await hash(`${hMkey}${res.vkey}`);
-      savePwd(res.label, res.pwd, vaultKey);
+      savePwd(res.label, res.pwd);
     });
 }
